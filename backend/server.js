@@ -7,6 +7,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+const authRoutes = require("./routes/authRoutes");
+const recommendRoutes = require("./routes/recommendRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/recommend", recommendRoutes);
 
 app.get("/", (req, res) => {
   res.send("API running...");
