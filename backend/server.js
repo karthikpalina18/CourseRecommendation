@@ -5,6 +5,18 @@ require("dotenv").config();
 
 const app = express();
 
+const passport = require("passport");
+require("./config/passport");
+
+app.use(require("express-session")({
+  secret: "secret",
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(cors());
 app.use(express.json());
 const authRoutes = require("./routes/authRoutes");

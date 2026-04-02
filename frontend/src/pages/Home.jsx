@@ -35,6 +35,7 @@ export default function Home() {
           --ink: #0A0A0F;
           --mist: #F4F5F7;
           --mid: #6B7280;
+          
         }
 
         * { box-sizing: border-box; }
