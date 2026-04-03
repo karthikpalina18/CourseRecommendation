@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-import {Icon} from "react-icons-kit";
-
 /* ── NaviQ Logo ── */
 const NaviQLogo = ({ size = 34 }) => (
   <svg width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -15,7 +13,7 @@ const NaviQLogo = ({ size = 34 }) => (
   </svg>
 );
 
-/* ── Icons ── */
+/* ── Inline nav icons (replaces broken react-icons-kit import) ── */
 const IcoForYou = ({ active }) => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={active ? "#C8FF00" : "currentColor"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -92,12 +90,12 @@ const getCat = (cat) => catColors[cat] || catColors["AI & ML"];
 
 /* ── Mock data ── */
 const MOCK_RECS = [
-  { title: "Deep Learning with PyTorch", category: "AI & ML",  match: "97%", duration: "8.5 hrs", lessons: 42, rating: 4.9, level: "Intermediate" },
-  { title: "React & TypeScript Masterclass", category: "Web Dev", match: "94%", duration: "12 hrs", lessons: 68, rating: 4.8, level: "Intermediate" },
-  { title: "AWS Solutions Architect Pro", category: "Cloud",   match: "91%", duration: "15 hrs", lessons: 80, rating: 4.7, level: "Advanced" },
-  { title: "Data Engineering with Spark", category: "Data",    match: "89%", duration: "10 hrs", lessons: 55, rating: 4.6, level: "Intermediate" },
-  { title: "UI/UX Design Systems",         category: "Design",  match: "86%", duration: "6 hrs",  lessons: 34, rating: 4.8, level: "Beginner" },
-  { title: "Kubernetes & Docker Mastery",  category: "DevOps",  match: "83%", duration: "11 hrs", lessons: 61, rating: 4.7, level: "Advanced" },
+  { title: "Deep Learning with PyTorch",       category: "AI & ML",  match: "97%", duration: "8.5 hrs", lessons: 42, rating: 4.9, level: "Intermediate" },
+  { title: "React & TypeScript Masterclass",   category: "Web Dev",  match: "94%", duration: "12 hrs",  lessons: 68, rating: 4.8, level: "Intermediate" },
+  { title: "AWS Solutions Architect Pro",       category: "Cloud",    match: "91%", duration: "15 hrs",  lessons: 80, rating: 4.7, level: "Advanced" },
+  { title: "Data Engineering with Spark",       category: "Data",     match: "89%", duration: "10 hrs",  lessons: 55, rating: 4.6, level: "Intermediate" },
+  { title: "UI/UX Design Systems",              category: "Design",   match: "86%", duration: "6 hrs",   lessons: 34, rating: 4.8, level: "Beginner" },
+  { title: "Kubernetes & Docker Mastery",       category: "DevOps",   match: "83%", duration: "11 hrs",  lessons: 61, rating: 4.7, level: "Advanced" },
 ];
 
 const MOCK_MY_COURSES = [
@@ -123,10 +121,18 @@ const SAVED_COURSES = [
   { title: "Ethical Hacking Bootcamp",            category: "Security", duration: "20 hrs", rating: 4.8, savedAt: "2 weeks ago" },
 ];
 
+/* ── Nav config now uses inline icon components, not react-icons-kit ── */
+const navItems = [
+  { id: "recommendations", label: "For You",    IconComp: IcoForYou  },
+  { id: "my-courses",      label: "My Courses", IconComp: IcoCourses },
+  { id: "browse",          label: "Browse",     IconComp: IcoBrowse  },
+  { id: "saved",           label: "Saved",      IconComp: IcoSaved   },
+];
+
 export default function Dashboard() {
   const [courses, setCourses]     = useState([]);
   const [loading, setLoading]     = useState(true);
-  const [error]         = useState("");
+  const [error, setError]         = useState("");   // fix: was never settable
   const [activeTab, setActiveTab] = useState("recommendations");
   const [catFilter, setCatFilter] = useState("All");
   const [searchVal, setSearchVal] = useState("");
@@ -144,7 +150,11 @@ export default function Dashboard() {
           headers: { Authorization: token },
         });
         setCourses(res.data.length ? res.data : MOCK_RECS);
-      } catch {
+      } catch (err) {
+        // Fall back to mock data silently; only show error for non-network failures
+        if (err.response) {
+          setError("Failed to load recommendations.");
+        }
         setCourses(MOCK_RECS);
       } finally {
         setLoading(false);
@@ -159,13 +169,6 @@ export default function Dashboard() {
     window.location.href = "/login";
   };
 
-  const navItems = [
-    { id: "recommendations", label: "For You",    Icon: IcoForYou  },
-    { id: "my-courses",      label: "My Courses", Icon: IcoCourses },
-    { id: "browse",          label: "Browse",     Icon: IcoBrowse  },
-    { id: "saved",           label: "Saved",      Icon: IcoSaved   },
-  ];
-
   const metrics = [
     { label: "Enrolled",        value: MOCK_MY_COURSES.length, accent: "#C8FF00", iconPath: <path d="M22 10v6M2 10l10-8 10 8-10 8-10-8z"/>, iconPath2: <path d="M6 12v5c3 3 9 3 12 0v-5"/> },
     { label: "Hours learned",   value: "24.5",                 accent: "#00C2FF", iconPath: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></> },
@@ -178,7 +181,7 @@ export default function Dashboard() {
   const filteredCourses = courses.filter(c => {
     const title = typeof c === "string" ? c : c.title || "";
     const cat   = typeof c === "object" && c.category ? c.category : "AI & ML";
-    const matchCat  = catFilter === "All" || cat === catFilter;
+    const matchCat    = catFilter === "All" || cat === catFilter;
     const matchSearch = title.toLowerCase().includes(searchVal.toLowerCase());
     return matchCat && matchSearch;
   });
@@ -195,7 +198,7 @@ export default function Dashboard() {
           font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 600;
           cursor: pointer; text-align: left; transition: all 0.18s; background: transparent;
         }
-        .nav-item.active  { background: rgba(200,255,0,0.1); color: #C8FF00; border-color: rgba(200,255,0,0.22); }
+        .nav-item.active   { background: rgba(200,255,0,0.1); color: #C8FF00; border-color: rgba(200,255,0,0.22); }
         .nav-item.inactive { color: #6B7280; }
         .nav-item.inactive:hover { background: rgba(255,255,255,0.05); color: #9CA3AF; }
 
@@ -302,7 +305,6 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* Bell */}
           <button style={{ width: 34, height: 34, borderRadius: 9, background: "#F4F5F7", border: "1.5px solid #E2E4E9", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", transition: "border-color 0.18s" }}
             onMouseEnter={e => e.currentTarget.style.borderColor = "#C8FF00"}
             onMouseLeave={e => e.currentTarget.style.borderColor = "#E2E4E9"}>
@@ -310,7 +312,6 @@ export default function Dashboard() {
             <span style={{ position: "absolute", top: 5, right: 5, width: 7, height: 7, borderRadius: "50%", background: "#FF5C3A", border: "1.5px solid #fff" }} />
           </button>
 
-          {/* Avatar chip */}
           <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "5px 11px 5px 5px", background: "#F4F5F7", border: "1.5px solid #E2E4E9", borderRadius: 11, cursor: "pointer" }}>
             <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#C8FF00,#00C2FF)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#0A0A0F" }}>{initials}</div>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{userName.split(" ")[0]}</span>
@@ -331,9 +332,10 @@ export default function Dashboard() {
         <aside style={{ width: 210, background: "#0A0A0F", flexShrink: 0, display: "flex", flexDirection: "column", padding: "26px 14px", overflowY: "auto", height: "calc(100vh - 62px)", position: "sticky", top: 62 }}>
           <div style={{ marginBottom: 6 }}>
             <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#374151", marginBottom: 8, paddingLeft: 13 }}>Navigate</p>
-            {navItems.map(({ id, label }) => (
+            {navItems.map(({ id, label, IconComp }) => (
               <button key={id} className={`nav-item ${activeTab === id ? "active" : "inactive"}`} onClick={() => setActiveTab(id)} style={{ marginBottom: 3 }}>
-                <Icon active={activeTab === id} />
+                {/* Fix: render each nav item's icon component directly — removed broken <Icon> from react-icons-kit */}
+                <IconComp active={activeTab === id} />
                 {label}
                 {id === "recommendations" && courses.length > 0 && (
                   <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 800, background: "rgba(200,255,0,0.18)", color: "#C8FF00", padding: "2px 8px", borderRadius: 99 }}>{courses.length}</span>
@@ -376,7 +378,6 @@ export default function Dashboard() {
           {/* ── FOR YOU ── */}
           {activeTab === "recommendations" && (
             <div className="fade-up">
-              {/* Greeting banner */}
               <div style={{ background: "#0A0A0F", borderRadius: 22, padding: "28px 32px", marginBottom: 24, position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: "-60px", right: "-40px", width: 260, height: 260, borderRadius: "50%", background: "radial-gradient(circle,rgba(200,255,0,0.18) 0%,transparent 70%)", pointerEvents: "none" }} />
                 <div style={{ position: "absolute", bottom: "-40px", right: "30%", width: 160, height: 160, borderRadius: "50%", background: "radial-gradient(circle,rgba(0,194,255,0.14) 0%,transparent 70%)", pointerEvents: "none" }} />
@@ -428,7 +429,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Loading */}
+              {/* Loading skeletons */}
               {loading && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
                   {[...Array(6)].map((_, i) => (
@@ -445,7 +446,7 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Error */}
+              {/* Error state */}
               {error && !loading && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "70px 0", textAlign: "center" }}>
                   <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,92,58,0.08)", border: "1.5px solid rgba(255,92,58,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
@@ -457,7 +458,7 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Empty */}
+              {/* Empty state */}
               {!loading && !error && filteredCourses.length === 0 && (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "70px 0", textAlign: "center" }}>
                   <div style={{ width: 64, height: 64, borderRadius: 20, background: "rgba(200,255,0,0.09)", border: "1.5px solid rgba(200,255,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
@@ -493,7 +494,7 @@ export default function Dashboard() {
                             {match && <span style={{ fontSize: 11, fontWeight: 800, color: "#C8FF00" }}>{match} match</span>}
                           </div>
                           <h3 style={{ fontSize: 13.5, fontWeight: 700, color: "#0A0A0F", lineHeight: 1.45, marginBottom: 10, flex: 1 }}>{title}</h3>
-                          {(duration || rating || level) && (
+                          {(duration || level) && (
                             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
                               {duration && <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif" }}><IcoClock />{duration}</span>}
                               {level && <span style={{ fontSize: 11, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif" }}>· {level}</span>}
@@ -527,8 +528,6 @@ export default function Dashboard() {
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0A0A0F", letterSpacing: "-0.025em" }}>My Courses</h2>
                 <p style={{ fontSize: 13.5, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>Pick up where you left off</p>
               </div>
-
-              {/* In-progress courses */}
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
                 {MOCK_MY_COURSES.map((c, i) => {
                   const col = getCat(c.category);
@@ -541,7 +540,7 @@ export default function Dashboard() {
                             <span style={{ fontSize: 12, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif" }}>Last studied {c.lastStudied}</span>
                           </div>
                           <h3 style={{ fontSize: 15, fontWeight: 700, color: "#0A0A0F", marginBottom: 14 }}>{c.title}</h3>
-                          <div style={{ marginBottom: 8 }}>
+                          <div style={{ marginBottom: 2 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                               <span style={{ fontSize: 12, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif" }}>{c.completed} of {c.lessons} lessons</span>
                               <span style={{ fontSize: 12, fontWeight: 700, color: c.progress >= 80 ? "#C8FF00" : "#374151" }}>{c.progress}%</span>
@@ -559,8 +558,6 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-
-              {/* Completed placeholder */}
               <h3 style={{ fontSize: 15, fontWeight: 700, color: "#0A0A0F", marginBottom: 14 }}>Completed</h3>
               <div style={{ background: "#fff", border: "1.5px solid #E8EAED", borderRadius: 18, padding: "36px", textAlign: "center" }}>
                 <div style={{ width: 52, height: 52, borderRadius: 15, background: "rgba(200,255,0,0.08)", border: "1.5px solid rgba(200,255,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
@@ -579,8 +576,6 @@ export default function Dashboard() {
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0A0A0F", letterSpacing: "-0.025em" }}>Browse Categories</h2>
                 <p style={{ fontSize: 13.5, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>Explore all topics available on NaviQ</p>
               </div>
-
-              {/* Search in browse */}
               <div style={{ position: "relative", marginBottom: 28 }}>
                 <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9CA3AF", display: "flex", pointerEvents: "none" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -592,7 +587,6 @@ export default function Dashboard() {
                   onBlur={e => { e.target.style.borderColor = "#E2E4E9"; e.target.style.boxShadow = "none"; }}
                 />
               </div>
-
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
                 {BROWSE_CATS.map((bc) => {
                   const col = getCat(bc.name);
@@ -606,8 +600,6 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-
-              {/* Featured courses */}
               <div style={{ marginTop: 32 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0F", marginBottom: 16 }}>Trending now</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
@@ -647,20 +639,16 @@ export default function Dashboard() {
                 <h2 style={{ fontSize: 22, fontWeight: 800, color: "#0A0A0F", letterSpacing: "-0.025em" }}>Saved Courses</h2>
                 <p style={{ fontSize: 13.5, color: "#9CA3AF", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>{SAVED_COURSES.length} courses bookmarked</p>
               </div>
-
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {SAVED_COURSES.map((s, i) => {
                   const col = getCat(s.category);
                   return (
                     <div key={i} className="saved-card">
-                      {/* Thumb */}
                       <div style={{ width: 56, height: 56, borderRadius: 14, background: col.bg, border: `1.5px solid ${col.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={col.icon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M22 10v6M2 10l10-8 10 8-10 8-10-8z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
                         </svg>
                       </div>
-
-                      {/* Info */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                           <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", color: col.text, background: col.bg, border: `1.5px solid ${col.border}`, padding: "2px 9px", borderRadius: 99 }}>{s.category}</span>
@@ -677,8 +665,6 @@ export default function Dashboard() {
                           </span>
                         </div>
                       </div>
-
-                      {/* Actions */}
                       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                         <button className="resume-btn" style={{ background: col.bg, color: col.text, border: `1.5px solid ${col.border}` }}>
                           <IcoPlay /> Start
