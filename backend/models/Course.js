@@ -2,11 +2,11 @@
 const mongoose = require("mongoose");
 
 const courseSchema = new mongoose.Schema({
-  title: String,
+  title: { type: String, required: true },
   category: String,
   difficulty: String,
-  tags: [String],
   description: String,
+  tags: [String],
   createdAt: { type: Date, default: Date.now }
 });
 

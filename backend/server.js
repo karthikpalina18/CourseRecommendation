@@ -24,6 +24,9 @@ const recommendRoutes = require("./routes/recommendRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/recommend", recommendRoutes);
+app.use("/api/study-materials", require("./routes/studyMaterialRoutes"));
+app.use("/api/courses", require("./routes/courseRoutes"));
+
 
 app.get("/", (req, res) => {
   res.send("API running...");

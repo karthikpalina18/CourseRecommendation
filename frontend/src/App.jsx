@@ -14,6 +14,9 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import OAuthCallback from './pages/OAuthCallback'
+import StudyMaterial from './pages/StudyMaterial'
+import CoursePage from './pages/CoursePage'
+
 function App() {
   // const [count, setCount] = useState(0)
 
@@ -26,6 +29,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/oauth-callback" element={<OAuthCallback />} />
+        <Route path="/course/:courseId" element={<CoursePage />} />
+        <Route path="/study-material" element={<StudyMaterial />} />
         
 
       </Routes>
